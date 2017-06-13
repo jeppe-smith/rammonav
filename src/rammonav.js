@@ -152,4 +152,4 @@ const rammonav = {
   
 }
 
-export default rammonav.init
+export default rammonav.init.bind(rammonav)
