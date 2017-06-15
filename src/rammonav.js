@@ -59,6 +59,16 @@ const rammonav = {
   showElement(element) {
     return element.style.display = ''
   },
+
+  toggleSubClass() {
+    const hasVisibleLinks = this.subLinks.filter((link) => !this.isHidden(link)).length
+
+    if (hasVisibleLinks) {
+      this.sub.classList.remove('empty')
+    } else {
+      this.sub.classList.add('empty')
+    }
+  },
   
   removeLastLinkFromNav() {
     const maxWidth = this.container.clientWidth
@@ -88,6 +98,8 @@ const rammonav = {
     })
     
     width = this.nav.clientWidth
+
+    this.toggleSubClass()
     
     if (width > maxWidth) {
       return requestAnimationFrame(this.removeLastLinkFromNav.bind(this))
@@ -136,6 +148,8 @@ const rammonav = {
     })
     
     width = this.nav.clientWidth
+
+    this.toggleSubClass()
     
     if (width < maxWidth) {
       return requestAnimationFrame(this.addNextLinkToNav.bind(this))
@@ -152,4 +166,6 @@ const rammonav = {
   
 }
 
-export default rammonav.init.bind(rammonav)
+export default function Rammonav(nav, subnav) {
+  return rammonav.init(nav, subnav)
+}
