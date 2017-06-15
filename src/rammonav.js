@@ -1,13 +1,3 @@
-window.requestAnimationFrame = window.requestAnimationFrame
-    || window.mozRequestAnimationFrame
-    || window.webkitRequestAnimationFrame
-    || window.msRequestAnimationFrame
-    || function(f){return setTimeout(f, 1000/60)}
- 
-window.cancelAnimationFrame = window.cancelAnimationFrame
-    || window.mozCancelAnimationFrame
-    || function(requestID){clearTimeout(requestID)}
-
 const rammonav = {
   
   cache(container, sub) {
@@ -166,6 +156,22 @@ const rammonav = {
   
 }
 
-export default function Rammonav(nav, subnav) {
+function Rammonav(nav, subnav) {
   return rammonav.init(nav, subnav)
 }
+
+if (window) {
+  window.Rammonav = Rammonav
+
+  window.requestAnimationFrame = window.requestAnimationFrame
+    || window.mozRequestAnimationFrame
+    || window.webkitRequestAnimationFrame
+    || window.msRequestAnimationFrame
+    || function(f){return setTimeout(f, 1000/60)}
+ 
+  window.cancelAnimationFrame = window.cancelAnimationFrame
+    || window.mozCancelAnimationFrame
+    || function(requestID){clearTimeout(requestID)}
+}
+
+export default Rammonav

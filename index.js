@@ -16,15 +16,6 @@
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Rammonav;
-  window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || function (f) {
-    return setTimeout(f, 1000 / 60);
-  };
-
-  window.cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame || function (requestID) {
-    clearTimeout(requestID);
-  };
-
   var rammonav = {
     cache: function cache(container, sub) {
       var _this = this;
@@ -193,4 +184,18 @@
   function Rammonav(nav, subnav) {
     return rammonav.init(nav, subnav);
   }
+
+  if (window) {
+    window.Rammonav = Rammonav;
+
+    window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || function (f) {
+      return setTimeout(f, 1000 / 60);
+    };
+
+    window.cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame || function (requestID) {
+      clearTimeout(requestID);
+    };
+  }
+
+  exports.default = Rammonav;
 });
