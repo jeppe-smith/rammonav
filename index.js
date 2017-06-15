@@ -159,4 +159,4 @@ var rammonav = {
   }
 };
 
-exports.default = rammonav.init;
+exports.default = rammonav.init.bind(rammonav);

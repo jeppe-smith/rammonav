@@ -52,7 +52,7 @@ body {
   margin: 0;
   padding: 0;
   
-  #priority-subnav & {
+  #rammonav-sub & {
     flex-direction: column;
   }
 }
