@@ -177,6 +177,7 @@
     init: function init(container, sub) {
       this.cache(container, sub);
       this.bind();
+      this.toggleSubClass();
       this.handleResize();
     }
   };

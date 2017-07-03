@@ -90,6 +90,8 @@ const rammonav = {
     width = this.nav.clientWidth
 
     this.toggleSubClass()
+
+
     
     if (width > maxWidth) {
       return requestAnimationFrame(this.removeLastLinkFromNav.bind(this))
@@ -151,6 +153,7 @@ const rammonav = {
   init(container, sub) {
     this.cache(container, sub)
     this.bind()
+    this.toggleSubClass()
     this.handleResize()
   }
   
