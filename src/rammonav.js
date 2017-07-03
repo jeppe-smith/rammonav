@@ -1,6 +1,7 @@
 const rammonav = {
   
-  cache(container, sub) {
+  cache(container, sub, options) {
+    this.options = options
     this.container = container
     this.nav = this.container.children[0]
     this.links = Array.from(this.nav.children)
@@ -14,6 +15,8 @@ const rammonav = {
     this.links.forEach((link, index) => link.setAttribute('rammo-width', link.clientWidth))
     
     requestAnimationFrame(() => {
+      this.sub.classList.add('empty')
+
       this.subLinks.forEach((link) => {
         link.classList.add('rammo-sublink')
         link.style.display = 'none'
@@ -55,8 +58,15 @@ const rammonav = {
 
     if (hasVisibleLinks) {
       this.sub.classList.remove('empty')
+      if (this.options.onContent) {
+        return this.options.onContent()
+      }
     } else {
       this.sub.classList.add('empty')
+
+      if (this.options.onEmpty) {
+        return this.options.onEmpty()
+      }
     }
   },
   
@@ -90,8 +100,6 @@ const rammonav = {
     width = this.nav.clientWidth
 
     this.toggleSubClass()
-
-
     
     if (width > maxWidth) {
       return requestAnimationFrame(this.removeLastLinkFromNav.bind(this))
@@ -150,17 +158,18 @@ const rammonav = {
     }
   },
   
-  init(container, sub) {
-    this.cache(container, sub)
+  init(container, sub, options) {
+    this.cache(container, sub, options)
     this.bind()
-    this.toggleSubClass()
     this.handleResize()
   }
   
 }
 
-function Rammonav(nav, subnav) {
-  return rammonav.init(nav, subnav)
+function Rammonav(nav, subnav, options) {
+  options = options || {}
+
+  return rammonav.init(nav, subnav, options)
 }
 
 if (window) {

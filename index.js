@@ -17,9 +17,10 @@
     value: true
   });
   var rammonav = {
-    cache: function cache(container, sub) {
+    cache: function cache(container, sub, options) {
       var _this = this;
 
+      this.options = options;
       this.container = container;
       this.nav = this.container.children[0];
       this.links = Array.from(this.nav.children);
@@ -37,6 +38,8 @@
       });
 
       requestAnimationFrame(function () {
+        _this.sub.classList.add('empty');
+
         _this.subLinks.forEach(function (link) {
           link.classList.add('rammo-sublink');
           link.style.display = 'none';
@@ -76,8 +79,15 @@
 
       if (hasVisibleLinks) {
         this.sub.classList.remove('empty');
+        if (this.options.onContent) {
+          return this.options.onContent();
+        }
       } else {
         this.sub.classList.add('empty');
+
+        if (this.options.onEmpty) {
+          return this.options.onEmpty();
+        }
       }
     },
     removeLastLinkFromNav: function removeLastLinkFromNav() {
@@ -174,16 +184,17 @@
         return true;
       }
     },
-    init: function init(container, sub) {
-      this.cache(container, sub);
+    init: function init(container, sub, options) {
+      this.cache(container, sub, options);
       this.bind();
-      this.toggleSubClass();
       this.handleResize();
     }
   };
 
-  function Rammonav(nav, subnav) {
-    return rammonav.init(nav, subnav);
+  function Rammonav(nav, subnav, options) {
+    options = options || {};
+
+    return rammonav.init(nav, subnav, options);
   }
 
   if (window) {
