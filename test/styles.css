@@ -1,0 +1,15 @@
+.rammonav {
+  display: flex;
+  width: 100%; }
+
+.nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex; }
+
+.nav.rammo-clone {
+  flex-direction: column; }
+
+.rammo-hidden, .rammo-empty {
+  display: none; }

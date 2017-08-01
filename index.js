@@ -16,197 +16,175 @@
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  var rammonav = {
-    cache: function cache(container, sub, options) {
-      var _this = this;
-
-      this.options = options;
-      this.container = container;
-      this.nav = this.container.children[0];
-      this.links = Array.from(this.nav.children);
-
-      this.links.forEach(function (link, index) {
-        return link.setAttribute('rammo-id', index);
-      });
-
-      this.sub = sub;
-      this.subNav = this.nav.cloneNode(true);
-      this.subLinks = Array.from(this.subNav.children);
-
-      this.links.forEach(function (link, index) {
-        return link.setAttribute('rammo-width', link.clientWidth);
-      });
-
-      requestAnimationFrame(function () {
-        _this.sub.classList.add('empty');
-
-        _this.subLinks.forEach(function (link) {
-          link.classList.add('rammo-sublink');
-          link.style.display = 'none';
-        });
-
-        _this.sub.appendChild(_this.subNav);
-      });
-    },
-    bind: function bind() {
-      window.addEventListener('resize', this.handleResize.bind(this));
-    },
-    handleResize: function handleResize() {
-      var maxWidth = this.container.clientWidth;
-      var width = this.nav.clientWidth;
-
-      if (width > maxWidth) {
-        requestAnimationFrame(this.removeLastLinkFromNav.bind(this));
-      } else {
-        requestAnimationFrame(this.addNextLinkToNav.bind(this));
-      }
-    },
-    isHidden: function isHidden(element) {
-      return getComputedStyle(element).display === 'none';
-    },
-    hideElement: function hideElement(element) {
-      return element.style.display = 'none';
-    },
-    showElement: function showElement(element) {
-      return element.style.display = '';
-    },
-    toggleSubClass: function toggleSubClass() {
-      var _this2 = this;
-
-      var hasVisibleLinks = this.subLinks.filter(function (link) {
-        return !_this2.isHidden(link);
-      }).length;
-
-      if (hasVisibleLinks) {
-        this.sub.classList.remove('empty');
-        if (this.options.onContent) {
-          return this.options.onContent();
-        }
-      } else {
-        this.sub.classList.add('empty');
-
-        if (this.options.onEmpty) {
-          return this.options.onEmpty();
-        }
-      }
-    },
-    removeLastLinkFromNav: function removeLastLinkFromNav() {
-      var _this3 = this;
-
-      var maxWidth = this.container.clientWidth;
-      var width = this.nav.clientWidth;
-      var lastIndex = this.links.length - 1;
-      var lastLink = this.links[lastIndex];
-      var lastLinkId = lastLink.getAttribute('rammo-id');
-      var isHidden = this.isHidden(lastLink);
-
-      while (isHidden) {
-        lastIndex = lastIndex - 1;
-        lastLink = this.links[lastIndex];
-        lastLinkId = lastLink.getAttribute('rammo-id');
-        isHidden = this.isHidden(lastLink);
-
-        if (lastIndex === 0) {
-          break;
-        }
-      }
-
-      this.hideElement(lastLink);
-
-      this.subLinks.forEach(function (link) {
-        var linkId = link.getAttribute('rammo-id');
-
-        if (linkId === lastLinkId) {
-          _this3.showElement(link);
-        }
-      });
-
-      width = this.nav.clientWidth;
-
-      this.toggleSubClass();
-
-      if (width > maxWidth) {
-        return requestAnimationFrame(this.removeLastLinkFromNav.bind(this));
-      } else {
-        return true;
-      }
-    },
-    addNextLinkToNav: function addNextLinkToNav() {
-      var _this4 = this;
-
-      var maxWidth = this.container.clientWidth;
-      var lastLink = this.links[this.links.length - 1];
-      var lastLinkIsVisible = !this.isHidden(lastLink);
-      var width = this.nav.clientWidth;
-      var nextIndex = 0;
-      var nextLink = this.links[nextIndex];
-      var nextLinkId = nextLink.getAttribute('rammo-id');
-      var nextLinkWidth = parseInt(nextLink.getAttribute('rammo-width'));
-      var isVisible = !this.isHidden(nextLink);
-
-      if (lastLinkIsVisible) {
-        return true;
-      }
-
-      while (isVisible) {
-        nextIndex = nextIndex + 1;
-        nextLink = this.links[nextIndex];
-        nextLinkId = nextLink.getAttribute('rammo-id');
-        nextLinkWidth = parseInt(nextLink.getAttribute('rammo-width'));
-        isVisible = !this.isHidden(nextLink);
-
-        if (nextIndex >= this.links.length - 1) {
-          break;
-        }
-      }
-
-      if (width + nextLinkWidth > maxWidth) {
-        return true;
-      }
-
-      this.showElement(nextLink);
-
-      this.subLinks.forEach(function (link) {
-        var linkId = link.getAttribute('rammo-id');
-
-        if (linkId === nextLinkId) {
-          _this4.hideElement(link);
-        }
-      });
-
-      width = this.nav.clientWidth;
-
-      this.toggleSubClass();
-
-      if (width < maxWidth) {
-        return requestAnimationFrame(this.addNextLinkToNav.bind(this));
-      } else {
-        return true;
-      }
-    },
-    init: function init(container, sub, options) {
-      this.cache(container, sub, options);
-      this.bind();
-      this.handleResize();
-    }
+  window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || function (f) {
+    return setTimeout(f, 1000 / 60);
   };
 
-  function Rammonav(nav, subnav, options) {
-    options = options || {};
+  window.cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame || function (requestID) {
+    clearTimeout(requestID);
+  };
 
-    return rammonav.init(nav, subnav, options);
-  }
+  function Rammonav(container, target) {
+    var breakpoint = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
 
-  if (window) {
-    window.Rammonav = Rammonav;
+    var nav = container.children[0];
+    var items = nav.children ? Array.from(nav.children) : [];
 
-    window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || function (f) {
-      return setTimeout(f, 1000 / 60);
+    target.classList.add('rammo-empty');
+
+    items.forEach(function (item, index) {
+      item.setAttribute('rammo-width', item.clientWidth);
+      item.setAttribute('rammo-index', index);
+    });
+
+    var clonedNav = nav.cloneNode(true);
+    var clonedItems = clonedNav.children ? Array.from(clonedNav.children) : [];
+
+    clonedNav.classList.add('rammo-clone');
+    clonedItems.forEach(function (clonedItem) {
+      return clonedItem.classList.add('rammo-clone', 'rammo-hidden');
+    });
+
+    target.appendChild(clonedNav);
+
+    function removeItems() {
+      var itemsToRemove = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+      var visibleItemsNotInItemsToRemove = items.filter(function (item) {
+        return !item.classList.contains('rammo-hidden') && itemsToRemove.indexOf(item) < 0;
+      });
+      var removeableItems = visibleItemsNotInItemsToRemove.filter(function (item) {
+        return item != null && item !== target;
+      });
+
+      if (!removeableItems.length) {
+        return doRemoveItems(itemsToRemove);
+      } else {
+        itemsToRemove.push(removeableItems[removeableItems.length - 1]);
+
+        var itemsWidthTotal = itemsToRemove.reduce(function (a, b) {
+          return a + parseInt(b.getAttribute('rammo-width'));
+        }, 0);
+
+        if (nav.clientWidth - itemsWidthTotal > container.clientWidth) {
+          return removeItems(itemsToRemove);
+        } else {
+          return doRemoveItems(itemsToRemove);
+        }
+      }
+    }
+
+    function addItems() {
+      var itemsToAdd = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+
+      itemsToAdd = itemsToAdd.filter(function (item) {
+        return item != null;
+      });
+
+      var hiddenItemsNotInItemsToAdd = items.filter(function (item) {
+        return item !== target && item.classList.contains('rammo-hidden') && itemsToAdd.indexOf(item) < 0;
+      });
+
+      if (!hiddenItemsNotInItemsToAdd.length) {
+        return doAddItems(itemsToAdd);
+      } else {
+        var nextItem = hiddenItemsNotInItemsToAdd[0];
+        var itemsWidthTotal = itemsToAdd.reduce(function (a, b) {
+          return a + parseInt(b.getAttribute('rammo-width'));
+        }, 0) + parseInt(nextItem.getAttribute('rammo-width'));
+
+        if (nav.clientWidth + itemsWidthTotal <= container.clientWidth) {
+          itemsToAdd.push(nextItem);
+
+          return addItems(itemsToAdd);
+        } else {
+          return doAddItems(itemsToAdd);
+        }
+      }
+    }
+
+    function doRemoveItems(itemsToRemove) {
+      if (itemsToRemove.length) {
+        requestAnimationFrame(function () {
+          itemsToRemove.forEach(function (item) {
+            var clonedItem = clonedItems.filter(function (clonedItem) {
+              return clonedItem.getAttribute('rammo-index') === item.getAttribute('rammo-index');
+            })[0];
+
+            clonedItem.classList.remove('rammo-hidden');
+            item.classList.add('rammo-hidden');
+          });
+
+          return toggleTargetEmptyClass();
+        });
+      }
+    }
+
+    function doAddItems(itemsToAdd) {
+      if (itemsToAdd.length) {
+        requestAnimationFrame(function () {
+          itemsToAdd.forEach(function (item) {
+            var clonedItem = clonedItems.filter(function (clonedItem) {
+              return clonedItem.getAttribute('rammo-index') === item.getAttribute('rammo-index');
+            })[0];
+
+            clonedItem.classList.add('rammo-hidden');
+            item.classList.remove('rammo-hidden');
+          });
+
+          return toggleTargetEmptyClass();
+        });
+      }
+    }
+
+    function toggleTargetEmptyClass() {
+      requestAnimationFrame(function () {
+        if (clonedItems.filter(function (clonedItem) {
+          return !clonedItem.classList.contains('rammo-hidden');
+        }).length) {
+          target.classList.remove('rammo-empty');
+        } else {
+          target.classList.add('rammo-empty');
+        }
+
+        target.setAttribute('rammo-width', target.clientWidth);
+
+        rammonav.movedItems = items.filter(function (item) {
+          return item.classList.contains('rammo-hidden');
+        });
+
+        if (typeof rammonav.onmove === 'function') {
+          rammonav.onmove(rammonav);
+        }
+
+        return check();
+      });
+    }
+
+    function check() {
+      if (window.outerWidth > breakpoint) {
+        if (nav.clientWidth > container.clientWidth) {
+          return removeItems();
+        } else {
+          return addItems();
+        }
+      }
+    }
+
+    var rammonav = {
+      check: check,
+      container: container,
+      nav: nav,
+      target: target,
+      movedItems: [],
+      onmove: null
     };
 
-    window.cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame || function (requestID) {
-      clearTimeout(requestID);
-    };
+    window.addEventListener('resize', rammonav.check.bind(rammonav));
+
+    rammonav.check();
+
+    return rammonav;
   }
 
   exports.default = Rammonav;

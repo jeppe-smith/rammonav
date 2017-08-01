@@ -1,189 +1,146 @@
-const rammonav = {
-  
-  cache(container, sub, options) {
-    this.options = options
-    this.container = container
-    this.nav = this.container.children[0]
-    this.links = Array.from(this.nav.children)
-    
-    this.links.forEach((link, index) => link.setAttribute('rammo-id', index))
-    
-    this.sub = sub
-    this.subNav = this.nav.cloneNode(true)
-    this.subLinks = Array.from(this.subNav.children)
-    
-    this.links.forEach((link, index) => link.setAttribute('rammo-width', link.clientWidth))
-    
-    requestAnimationFrame(() => {
-      this.sub.classList.add('empty')
+window.requestAnimationFrame = window.requestAnimationFrame
+  || window.mozRequestAnimationFrame
+  || window.webkitRequestAnimationFrame
+  || window.msRequestAnimationFrame
+  || function(f){return setTimeout(f, 1000/60)}
 
-      this.subLinks.forEach((link) => {
-        link.classList.add('rammo-sublink')
-        link.style.display = 'none'
+window.cancelAnimationFrame = window.cancelAnimationFrame
+  || window.mozCancelAnimationFrame
+  || function(requestID){clearTimeout(requestID)}
+
+function Rammonav(container, target, breakpoint = 0) {
+  const nav = container.children[0]
+  const items = nav.children ? Array.from(nav.children) : []
+  
+  target.classList.add('rammo-empty')
+  
+  items.forEach((item, index) => {    
+    item.setAttribute('rammo-width', item.clientWidth)
+    item.setAttribute('rammo-index', index)
+  })
+  
+  const clonedNav = nav.cloneNode(true)
+  const clonedItems = clonedNav.children ? Array.from(clonedNav.children) : []
+  
+  clonedNav.classList.add('rammo-clone')
+  clonedItems.forEach(clonedItem => clonedItem.classList.add('rammo-clone', 'rammo-hidden'))
+  
+  target.appendChild(clonedNav)
+  
+  function removeItems(itemsToRemove = []) {
+    const visibleItemsNotInItemsToRemove = items.filter(item => !item.classList.contains('rammo-hidden') && itemsToRemove.indexOf(item) < 0)
+    const removeableItems = visibleItemsNotInItemsToRemove.filter(item => item != null && item !== target)
+
+    if (!removeableItems.length) {
+      return doRemoveItems(itemsToRemove)
+    } else {        
+      itemsToRemove.push(removeableItems[ removeableItems.length - 1 ])
+
+      const itemsWidthTotal = itemsToRemove.reduce((a, b) => a + parseInt(b.getAttribute('rammo-width')), 0)
+
+      if (nav.clientWidth - itemsWidthTotal > container.clientWidth) {
+        return removeItems(itemsToRemove)
+      } else {
+        return doRemoveItems(itemsToRemove)
+      }
+    }
+  }
+
+  function addItems(itemsToAdd = []) {
+    itemsToAdd = itemsToAdd.filter(item => item != null)
+    
+    const hiddenItemsNotInItemsToAdd = items.filter(item => item !== target && item.classList.contains('rammo-hidden') && itemsToAdd.indexOf(item) < 0)
+
+    if (!hiddenItemsNotInItemsToAdd.length) {
+      return doAddItems(itemsToAdd)
+    } else {
+      const nextItem = hiddenItemsNotInItemsToAdd[0]
+      const itemsWidthTotal = itemsToAdd.reduce((a, b) => a + parseInt(b.getAttribute('rammo-width')), 0) + parseInt(nextItem.getAttribute('rammo-width'))
+
+      if (nav.clientWidth + itemsWidthTotal <= container.clientWidth) {
+        itemsToAdd.push(nextItem)
+
+        return addItems(itemsToAdd)
+      } else {
+        return doAddItems(itemsToAdd)
+      }
+    }
+  }
+
+  function doRemoveItems(itemsToRemove) {
+    if (itemsToRemove.length) {
+      requestAnimationFrame(() => {
+        itemsToRemove.forEach(item => {
+          const clonedItem = clonedItems.filter(clonedItem => clonedItem.getAttribute('rammo-index') === item.getAttribute('rammo-index'))[0]
+
+          clonedItem.classList.remove('rammo-hidden')
+          item.classList.add('rammo-hidden')
+        })
+
+        return toggleTargetEmptyClass()
       })
+    }
+  }
+
+  function doAddItems(itemsToAdd) {
+    if (itemsToAdd.length) {
+      requestAnimationFrame(() => {
+        itemsToAdd.forEach(item => {
+          const clonedItem = clonedItems.filter(clonedItem => clonedItem.getAttribute('rammo-index') === item.getAttribute('rammo-index'))[0]
+
+          clonedItem.classList.add('rammo-hidden')
+          item.classList.remove('rammo-hidden')
+        })
+
+        return toggleTargetEmptyClass()
+      })
+    }
+  }
+
+  function toggleTargetEmptyClass() {
+    requestAnimationFrame(() => {
+      if (clonedItems.filter(clonedItem => !clonedItem.classList.contains('rammo-hidden')).length) {
+        target.classList.remove('rammo-empty')
+      } else {
+        target.classList.add('rammo-empty')
+      }
+
+      target.setAttribute('rammo-width', target.clientWidth)
       
-      this.sub.appendChild(this.subNav)
+      rammonav.movedItems = items.filter(item => item.classList.contains('rammo-hidden'))
+      
+      if (typeof rammonav.onmove === 'function') {
+        rammonav.onmove(rammonav)
+      }
+      
+      return check()
     })
-  },
-  
-  bind() {
-    window.addEventListener('resize', this.handleResize.bind(this))
-  },
-  
-  handleResize() {
-    const maxWidth = this.container.clientWidth
-    let width = this.nav.clientWidth
-    
-    if (width > maxWidth) {
-      requestAnimationFrame(this.removeLastLinkFromNav.bind(this))
-    } else {
-      requestAnimationFrame(this.addNextLinkToNav.bind(this))
-    }
-  },
-  
-  isHidden(element) {
-    return getComputedStyle(element).display === 'none'
-  },
-  
-  hideElement(element) {
-    return element.style.display = 'none'
-  },
-  
-  showElement(element) {
-    return element.style.display = ''
-  },
-
-  toggleSubClass() {
-    const hasVisibleLinks = this.subLinks.filter((link) => !this.isHidden(link)).length
-
-    if (hasVisibleLinks) {
-      this.sub.classList.remove('empty')
-      if (this.options.onContent) {
-        return this.options.onContent()
-      }
-    } else {
-      this.sub.classList.add('empty')
-
-      if (this.options.onEmpty) {
-        return this.options.onEmpty()
-      }
-    }
-  },
-  
-  removeLastLinkFromNav() {
-    const maxWidth = this.container.clientWidth
-    let width = this.nav.clientWidth
-    let lastIndex = this.links.length - 1
-    let lastLink = this.links[lastIndex]
-    let lastLinkId = lastLink.getAttribute('rammo-id')
-    let isHidden = this.isHidden(lastLink)
-    
-    while (isHidden) {
-      lastIndex = lastIndex - 1
-      lastLink = this.links[lastIndex]
-      lastLinkId = lastLink.getAttribute('rammo-id')
-      isHidden = this.isHidden(lastLink)
-      
-      if (lastIndex === 0) { break }
-    }
-    
-    this.hideElement(lastLink)
-    
-    this.subLinks.forEach((link) => {
-      const linkId = link.getAttribute('rammo-id')
-      
-      if (linkId === lastLinkId) {
-        this.showElement(link)
-      }
-    })
-    
-    width = this.nav.clientWidth
-
-    this.toggleSubClass()
-    
-    if (width > maxWidth) {
-      return requestAnimationFrame(this.removeLastLinkFromNav.bind(this))
-    } else {
-      return true
-    }
-  },
-  
-  addNextLinkToNav() {
-    const maxWidth = this.container.clientWidth
-    const lastLink = this.links[this.links.length - 1]
-    const lastLinkIsVisible = !this.isHidden(lastLink)
-    let width = this.nav.clientWidth
-    let nextIndex = 0
-    let nextLink = this.links[nextIndex]
-    let nextLinkId = nextLink.getAttribute('rammo-id')
-    let nextLinkWidth = parseInt( nextLink.getAttribute('rammo-width') )
-    let isVisible = !this.isHidden(nextLink)
-    
-    if (lastLinkIsVisible) {
-      return true
-    }
-    
-    while (isVisible) {
-      nextIndex = nextIndex + 1
-      nextLink = this.links[nextIndex]
-      nextLinkId = nextLink.getAttribute('rammo-id')
-      nextLinkWidth = parseInt( nextLink.getAttribute('rammo-width') )
-      isVisible = !this.isHidden(nextLink)
-      
-      if (nextIndex >= this.links.length - 1) { break }
-    }
-    
-    if (width + nextLinkWidth > maxWidth) {
-      return true
-    }
-    
-    this.showElement(nextLink)
-    
-    this.subLinks.forEach((link) => {
-      const linkId = link.getAttribute('rammo-id')
-      
-      if (linkId === nextLinkId) {
-        this.hideElement(link)
-      }
-    })
-    
-    width = this.nav.clientWidth
-
-    this.toggleSubClass()
-    
-    if (width < maxWidth) {
-      return requestAnimationFrame(this.addNextLinkToNav.bind(this))
-    } else {
-      return true
-    }
-  },
-  
-  init(container, sub, options) {
-    this.cache(container, sub, options)
-    this.bind()
-    this.handleResize()
   }
   
-}
-
-function Rammonav(nav, subnav, options) {
-  options = options || {}
-
-  return rammonav.init(nav, subnav, options)
-}
-
-if (window) {
-  window.Rammonav = Rammonav
-
-  window.requestAnimationFrame = window.requestAnimationFrame
-    || window.mozRequestAnimationFrame
-    || window.webkitRequestAnimationFrame
-    || window.msRequestAnimationFrame
-    || function(f){return setTimeout(f, 1000/60)}
- 
-  window.cancelAnimationFrame = window.cancelAnimationFrame
-    || window.mozCancelAnimationFrame
-    || function(requestID){clearTimeout(requestID)}
+  function check() {
+    if (window.outerWidth > breakpoint) {
+      if (nav.clientWidth > container.clientWidth) {
+        return removeItems()
+      } else {
+        return addItems()
+      }
+    }
+  }
+  
+  const rammonav = {
+    check: check,
+    container: container,
+    nav: nav,
+    target: target,
+    movedItems: [],
+    onmove: null
+  }
+  
+  window.addEventListener('resize', rammonav.check.bind(rammonav))
+  
+  rammonav.check()
+  
+  return rammonav
 }
 
 export default Rammonav
