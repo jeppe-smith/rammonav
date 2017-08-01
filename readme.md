@@ -9,7 +9,7 @@ At the moment only horizontal navigations are supported.
 Below is an example of how Rammonav can be used. The example uses flex to position navigation and items but any case where the container can't overflow its parent and the navigation can overflow the container should work.
 
 #### Markup
-```
+```html
 <nav class="rammonav">
   <ul class="nav">
     <li class="nav__item"><a href="#" class="nav__link">Donatello</a></li>
@@ -24,7 +24,7 @@ Below is an example of how Rammonav can be used. The example uses flex to positi
 ```
 
 #### Styling
-```
+```css
 .rammonav {
   display: flex;
   width: 100%; }
@@ -36,14 +36,14 @@ Below is an example of how Rammonav can be used. The example uses flex to positi
   display: flex; }
 
 .nav.rammo-clone {
-  flex-direction: column; } // Stack the items in the cloned navigation
+  flex-direction: column; } /* Stack the items in the cloned navigation */
 
 .rammo-hidden, .rammo-empty {
   display: none; }
 ```
 
 #### Javascript
-```
+```javascript
 import Rammonav from 'rammonav'
 
 const rammonav = Rammonav(
